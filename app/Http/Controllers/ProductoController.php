@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProductoController extends Controller
 {
@@ -37,7 +36,14 @@ class ProductoController extends Controller
             'imagen' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $rutaImagen = $request->file('imagen')->store('productos', 'public');
+        if ($request->hasFile('imagen')) {
+            $imagen = $request->file('imagen');
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $imagen->move(public_path('img'), $nombreImagen);
+            $rutaImagen = 'img/' . $nombreImagen;
+        } else {
+            $rutaImagen = null;
+        }
 
         Producto::create([
             'nombre' => $request->nombre,
@@ -56,6 +62,12 @@ class ProductoController extends Controller
         $productos = Producto::where('tipo', 'Pupusas')->get();
         return view('productos.pupusas', compact('productos'));
     }
+
+public function comida() {
+    $productos = Producto::whereIn('tipo', ['Pupusas', 'Hamburguesas', 'Pizza'])->get(); // ejemplo
+    return view('admin.pedidos.comida', compact('productos'));
+}
+
 
     public function hamburguesas()
     {
@@ -93,23 +105,16 @@ class ProductoController extends Controller
         ]);
 
         if ($request->hasFile('imagen')) {
-            $file = $request->file('imagen');
+            $imagen = $request->file('imagen');
+            $nombreImagen = time() . '_' . $imagen->getClientOriginalName();
+            $imagen->move(public_path('img'), $nombreImagen);
 
-            if (!$file->isValid()) {
-                return back()->withErrors(['imagen' => 'El archivo de imagen no es válido.']);
+            // Eliminar imagen anterior si existe
+            if ($producto->imagen && file_exists(public_path($producto->imagen))) {
+                unlink(public_path($producto->imagen));
             }
 
-            try {
-                $rutaImagen = $file->store('productos', 'public');
-
-                if ($producto->imagen && Storage::disk('public')->exists($producto->imagen)) {
-                    Storage::disk('public')->delete($producto->imagen);
-                }
-
-                $producto->imagen = $rutaImagen;
-            } catch (\Exception $e) {
-                return back()->withErrors(['imagen' => 'Error inesperado al subir imagen: ' . $e->getMessage()]);
-            }
+            $producto->imagen = 'img/' . $nombreImagen;
         }
 
         $producto->update([
@@ -120,13 +125,15 @@ class ProductoController extends Controller
             'tipo' => $request->tipo,
         ]);
 
+        $producto->save();
+
         return redirect()->route('productos.index')->with('success', 'Producto actualizado con éxito.');
     }
 
     public function destroy(Producto $producto)
     {
-        if ($producto->imagen && Storage::disk('public')->exists($producto->imagen)) {
-            Storage::disk('public')->delete($producto->imagen);
+        if ($producto->imagen && file_exists(public_path($producto->imagen))) {
+            unlink(public_path($producto->imagen));
         }
 
         $producto->delete();

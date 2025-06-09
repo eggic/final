@@ -94,6 +94,12 @@ Route::prefix('pedido')->group(function () {
     Route::get('/ordenar', [PedidoController::class, 'ordenar'])->name('pedido.ordenar');
     Route::post('/store', [PedidoController::class, 'store'])->name('pedido.store');
     Route::get('/detalles', [PedidoController::class, 'detalles'])->name('pedido.detalles');
+    Route::get('/finalizar', [PedidoController::class, 'finalizar'])->name('pedido.finalizar');
+Route::get('/ordenar', [PedidoController::class, 'ordenar'])->name('pedido.ordenar');
+
+
+    Route::get('/pedido_comida', [ProductoController::class, 'pedido_comida'])->name('pedido.comida');
+
 
     // Categorías generales
     Route::get('/comida', [PedidoController::class, 'comida'])->name('pedido.comida');

@@ -22,7 +22,7 @@
             <p><strong>Tipo:</strong> {{ $producto->tipo }}</p>
 
             @if ($producto->imagen)
-                <img src="{{ asset('storage/' . $producto->imagen) }}" alt="Imagen del producto" class="img-fluid" style="max-width: 300px; height: auto; margin-top: 1rem;" />
+                <img src="{{ asset($producto->imagen) }}" alt="Imagen del producto" class="img-fluid" style="max-width: 300px; height: auto; margin-top: 1rem;" />
 
             @else
                 <p>No hay imagen disponible</p>

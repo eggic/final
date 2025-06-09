@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Pedido;
 use App\Models\DetallePedido;
 use App\Models\Producto;
+use App\Models\Notification;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
@@ -51,65 +52,71 @@ class CarritoController extends Controller
         return view('carrito', compact('carrito'));
     }
 
-    // Confirmar pedido, crear en BD y enviar correo
+    // Confirmar pedido, crear en BD y enviar correo + notificación
     public function confirmarPedido(Request $request)
-{
-    $carrito = session('carrito', []);
+    {
+        $carrito = session()->get('carrito');
 
-    if (empty($carrito)) {
-        return redirect()->back()->with('error', 'El carrito está vacío.');
-    }
-
-    DB::beginTransaction();
-
-    try {
-        $total = 0;
-        foreach ($carrito as $item) {
-            $total += $item['precio'] * $item['cantidad'];
-        }
-
-        $pedido = Pedido::create([
-            'usuario_id' => auth()->id(),
-            'fecha_pedido' => now(),
-            'estado' => 'pendiente',
-            'total' => $total,
-        ]);
-
-        foreach ($carrito as $item) {
-            DetallePedido::create([
-                'pedido_id' => $pedido->id,
-                'producto_id' => $item['id'],
-                'cantidad' => $item['cantidad'],
-                'precio_unitario' => $item['precio'],
-            ]);
-        }
-
-        session()->forget('carrito');
-        DB::commit();
-
-        // Cargar relación para enviar a la vista
-        $pedido = Pedido::with('detalles.producto')->find($pedido->id);
-
-        // Enviar correo con PDF adjunto
-        Mail::to(auth()->user()->email)->send(new PedidoConfirmadoMailable($pedido));
-
-        // Aquí rediriges a la vista de confirmación, pasando el pedido
-        return view('pedido.confirmacion', compact('pedido'));
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return redirect()->back()->with('error', 'Error al procesar el pedido: ' . $e->getMessage());
-    }
+if (empty($carrito) || !is_array($carrito)) {
+    return redirect()->back()->with('error', 'El carrito está vacío.');
 }
 
+
+        DB::beginTransaction();
+
+        try {
+            $total = 0;
+            foreach ($carrito as $item) {
+                $total += $item['precio'] * $item['cantidad'];
+            }
+
+            $pedido = Pedido::create([
+                'usuario_id' => auth()->id(),
+                'fecha_pedido' => now(),
+                'estado' => 'pendiente',
+                'total' => $total,
+            ]);
+
+            foreach ($carrito as $item) {
+                DetallePedido::create([
+                    'pedido_id' => $pedido->id,
+                    'producto_id' => $item['id'],
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio'],
+                ]);
+            }
+
+            // ✅ Crear la notificación
+            Notification::create([
+                'user_id' => auth()->id(),
+                'order_id' => $pedido->id,
+                'message' => 'Tu pedido #' . $pedido->id . ' ha sido confirmado.',
+            ]);
+
+            session()->forget('carrito');
+            DB::commit();
+
+            // Cargar relación para enviar a la vista
+            $pedido = Pedido::with('detalles.producto')->find($pedido->id);
+
+            // Enviar correo con PDF adjunto
+            Mail::to(auth()->user()->email)->send(new PedidoConfirmadoMailable($pedido));
+
+            // Redirige a vista de confirmación
+            return view('pedido.confirmacion', compact('pedido'));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error al procesar el pedido: ' . $e->getMessage());
+        }
+    }
 
     public function generarRecibo($idPedido)
-{
-    $pedido = Pedido::with('detalles.producto')->findOrFail($idPedido);
+    {
+        $pedido = Pedido::with('detalles.producto')->findOrFail($idPedido);
 
-    $pdf = Pdf::loadView('pdf.recibo', compact('pedido'));
+        $pdf = Pdf::loadView('pdf.recibo', compact('pedido'));
 
-    return $pdf->download("recibo_pedido_{$pedido->id}.pdf");
-}
-
+        return $pdf->download("recibo_pedido_{$pedido->id}.pdf");
+    }
 }

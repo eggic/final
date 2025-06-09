@@ -52,10 +52,11 @@
                             <td>{{ $producto->id }}</td>
                             <td>
                                 @if($producto->imagen)
-                                    <img src="{{ asset('storage/' . $producto->imagen) }}" alt="Imagen" width="60" height="60" class="rounded" />
-                                @else
-                                    <span class="text-muted">Sin imagen</span>
-                                @endif
+    <img src="{{ asset($producto->imagen) }}" alt="Imagen" width="60" height="60" class="rounded" />
+@else
+    <span class="text-muted">Sin imagen</span>
+@endif
+
                             </td>
                             <td>{{ $producto->nombre }}</td>
                             <td>{{ $producto->descripcion }}</td>

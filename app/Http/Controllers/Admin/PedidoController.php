@@ -25,6 +25,10 @@ class PedidoController extends Controller
         $pedidos = Pedido::with('detalles')->orderBy('created_at', 'desc')->get();
         return view('admin.pedidos.index', compact('pedidos'));
     }
+public function comida()
+{
+    return view('pedido_comida'); // Asegúrate de tener esa vista
+}
 
     // Cambiar estado de pedido
     public function cambiarEstado(Request $request, $id)

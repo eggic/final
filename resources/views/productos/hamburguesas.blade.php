@@ -36,7 +36,7 @@
         @forelse($productos as $producto)
         <div class="mb-4">
             <div class="card shadow-sm">
-                <img src="{{ asset('storage/' . $producto->imagen) }}" class="img-pequena" alt="Imagen de hamburguesa">
+                <img src="{{ asset($producto->imagen) }}" class="img-pequena" alt="Imagen de hamburguesa">
                 <div class="card-body">
                     <h5 class="card-title">{{ $producto->nombre }}</h5>
                     <p class="card-text">{{ $producto->descripcion }}</p>
