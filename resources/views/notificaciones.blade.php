@@ -3,7 +3,7 @@
 @section('content')
 <main class="container py-4">
     <div class="card shadow-sm p-4 mx-auto" style="max-width: 700px;">
-        <h2 class="text-center mb-4">Notificaciones</h2>
+        <h2 class="text-center mb-4" style="color: #c26c8e;">Notificaciones</h2>
 
         @if ($notifications->isEmpty())
             <div class="alert alert-info text-center">
@@ -12,35 +12,50 @@
         @else
             @foreach ($notifications as $notification)
                 @php
-                    $status = strtolower($notification->status);
-                    $cardColor = match($status) {
-                        'entregado' => 'bg-success text-white',
-                        'pendiente' => 'bg-danger text-white',
+                    $estado = strtolower($notification->pedido->estado ?? 'desconocido');
+                    $badgeColor = match($estado) {
+                        'entregado' => 'bg-success',
+                        'pendiente' => 'bg-danger',
                         'caminando', 'en camino' => 'bg-warning text-dark',
-                        'cancelado' => 'bg-secondary text-white',
-                        default => 'bg-info text-white',
+                        'cancelado' => 'bg-secondary',
+                        default => 'bg-info',
                     };
                 @endphp
 
-                <div class="card mb-3 {{ $cardColor }}">
-                    <div class="card-header d-flex justify-content-between align-items-center" onclick="toggleDetails('details-{{ $notification->id }}')" style="cursor:pointer;">
+                <div class="card mb-3 border-0 shadow-sm position-relative" style="border-radius: 12px;">
+                    
+                    {{-- Mostrar botón eliminar SOLO si el pedido está entregado --}}
+                    @if ($estado === 'entregado')
+                        <form method="POST" action="{{ route('notificacion.destroy', $notification->id) }}" class="position-absolute top-0 end-0 m-2">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar notificación" onclick="return confirm('¿Eliminar esta notificación?')">
+                                ✖
+                            </button>
+                        </form>
+                    @endif
+
+                    <div class="card-header d-flex justify-content-between align-items-center"
+                        onclick="toggleDetails('details-{{ $notification->id }}')"
+                        style="cursor:pointer; background-color: #fce4ec; border-radius: 12px 12px 0 0;">
+                        
                         <div>
-                            <strong>Pedido #{{ $notification->order_id }}</strong>
-                            <div class="small">
-                                Estado: 
-                                <span class="badge bg-light text-dark">{{ ucfirst($notification->status) }}</span>
+                            <strong style="color:#c26c8e;">Pedido #{{ $notification->order_id }}</strong>
+                            <div class="small mt-1">
+                                Estado:
+                                <span class="badge {{ $badgeColor }}">{{ ucfirst($estado) }}</span>
                             </div>
                         </div>
-                        <span>&#x25BC;</span>
+                        <span style="font-size: 1.2rem; color: #c26c8e;">&#x25BC;</span>
                     </div>
 
-                    <div id="details-{{ $notification->id }}" class="card-body bg-white text-dark" style="display: none;">
+                    <div id="details-{{ $notification->id }}" class="card-body bg-light text-dark" style="display: none; border-radius: 0 0 12px 12px;">
                         @if ($notification->pedido && $notification->pedido->detalles)
                             <ul class="list-group list-group-flush">
                                 @foreach ($notification->pedido->detalles as $detalle)
                                     <li class="list-group-item">
                                         {{ $detalle->producto->nombre ?? 'Producto eliminado' }} 
-                                        x{{ $detalle->cantidad }} - ${{ $detalle->precio_unitario }}
+                                        x{{ $detalle->cantidad }} - ${{ number_format($detalle->precio_unitario, 2) }}
                                     </li>
                                 @endforeach
                             </ul>

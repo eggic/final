@@ -14,7 +14,9 @@ use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\PerfilController;
 
 
-Route::post('/admin/pedidos/{id}/estado', [PedidoController::class, 'cambiarEstado'])->middleware('auth')->name('admin.pedidos.estado');
+Route::post('/admin/pedidos/{id}/estado', [PedidoController::class, 'cambiarEstado'])
+->middleware('auth')
+->name('admin.pedidos.estado');
 
 
 Route::get('/perfil', [PerfilController::class, 'index'])->middleware('auth')->name('perfil.index');
@@ -96,6 +98,10 @@ Route::prefix('pedido')->group(function () {
     Route::get('/detalles', [PedidoController::class, 'detalles'])->name('pedido.detalles');
     Route::get('/finalizar', [PedidoController::class, 'finalizar'])->name('pedido.finalizar');
 Route::get('/ordenar', [PedidoController::class, 'ordenar'])->name('pedido.ordenar');
+Route::delete('/notificacion/{id}', [NotificacionController::class, 'destroy'])->name('notificacion.destroy');
+Route::get('/admin/pedidos', [PedidoController::class, 'indexAdmin'])->name('admin.pedidos.index');
+Route::get('/productos/pedidos', [PedidoController::class, 'mostrarPedidos'])->name('productos.pedidos');
+
 
 
     Route::get('/pedido_comida', [ProductoController::class, 'pedido_comida'])->name('pedido.comida');

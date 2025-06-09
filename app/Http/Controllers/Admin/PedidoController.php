@@ -44,6 +44,13 @@ public function comida()
         return redirect()->back()->with('success', 'Estado actualizado correctamente.');
     }
 
+    public function mostrarPedidos()
+{
+    $pedidos = Pedido::with('detalles')->orderBy('created_at', 'desc')->get();
+    return view('productos.index1', compact('pedidos'));
+}
+
+
     // Eliminar pedido
     public function eliminar($id)
     {

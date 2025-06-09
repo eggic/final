@@ -27,9 +27,10 @@
 
         </div>
         <div class="col-md-4 mb-3">
-            <a href="{{ route('productos.index1') }}" class="btn btn-outline-secondary w-100 py-3 shadow">
-                📦 Gestionar Pedidos
-            </a>
+            <a href="{{ route('productos.pedidos') }}" class="btn btn-outline-secondary w-100 py-3 shadow">
+    📦 Gestionar Pedidos
+</a>
+
         </div>
         <div class="col-md-4 mb-3">
             <a href= "{{ route('admin.reportes.index') }}" class="btn btn-outline-success w-100 py-3 shadow">
